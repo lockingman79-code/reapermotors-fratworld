@@ -256,11 +256,12 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const GRADES = { 'Recrue': 0.3, 'Vendeur': 0.5, 'Responsable': 0.8, 'Co-Patron': 0.10, 'Patron': 0.12 };
+        const GRADES = { 'Recrue': 0.3, 'Vendeur': 0.5, 'Responsable': 0.7, 'Co-Patron': 0.9, 'Patron': 1 };
         const BIKES = [
             { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
-            { id: 'b2', name: 'BF400', price: 120000, buyPrice: 80000 },
-            { id: 'b3', name: 'Western Gargoyle', price: 55000, buyPrice: 40000 },
+            { id: 'b2', name: 'Avarus', price: 65000, buyPrice: 97500 },
+            { id: 'b3', name: 'BF400', price: 120000, buyPrice: 80000 },
+            { id: 'b4', name: 'Gargoyle', price: 55000, buyPrice: 40000 },
             { id: 'b5', name: 'Bagger', price: 30000, buyPrice: 20000 },
             { id: 'b6', name: 'Bati 801', price: 75000, buyPrice: 50000 },
             { id: 'b7', name: 'Bati 801RR', price: 105000, buyPrice: 70000 },
