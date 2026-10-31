@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaper Motors - Management Live</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+       
+        body { 
+            background: linear-gradient(rgba(13, 13, 17, 0.88), rgba(13, 13, 17, 0.94)), 
+                        url('https://img.freepik.com/premium-photo/grim-reaper-riding-motorcycle-with-flames_1148129-30563.jpg?w=996') no-repeat center center fixed;
+            background-size: cover;
+            color: #f3f4f6; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+        }
+        
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .glass-card { background: #16161e; border: 1px solid rgb(240, 235, 236); border-radius: 16px; padding: 2rem; width: 100%; max-width: 420px; box-shadow: 0 0 25px rgba(225, 29, 72, 0.2); }
+        .title { text-align: center; font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 0.2rem; }
+        .title span { color: #e16b1d; }
+        .subtitle { text-align: center; font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; margin-bottom: 1.5rem; }
+        
+        .tab-btn-group { display: flex; background: #000; padding: 4px; border-radius: 10px; border: 1px solid #262635; margin-bottom: 1.5rem; }
+        .tab-btn { flex: 1; padding: 8px; font-weight: bold; font-size: 0.85rem; border: none; border-radius: 8px; cursor: pointer; color: #9ca3af; background: transparent; }
+        .tab-btn.active { background: #e16b1d; color: #fff; }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.75rem; font-weight: bold; color: #9ca3af; margin-bottom: 0.4rem; text-transform: uppercase; }
+        .form-group input, .form-group select { width: 100%; background: #000; border: 1px solid #262635; border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 0.9rem; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: #e16b1d; }
+        
+        .btn-submit { width: 100%; background: #e16b1d; color: #fff; font-weight: bold; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+        .btn-submit:hover { background: #c55a15; }
+        .btn-green { background: #e16b1d; }
+        .btn-green:hover { background: #c55a15; }
+        
+        .alert-error { background: rgba(127, 29, 29, 0.5); border: 1px solid #991b1b; color: #fca5a5; font-size: 0.8rem; font-weight: bold; text-align: center; padding: 8px; border-radius: 8px; margin-bottom: 1rem; display: none; }
+        
+        .hidden { display: none !important; }
+        
+        header { background: #000; border-bottom: 1px solid #262635; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        nav { display: flex; gap: 8px; }
+        .nav-btn { background: #16161e; border: 1px solid #262635; color: #fff; padding: 6px 12px; font-weight: bold; font-size: 0.8rem; border-radius: 8px; cursor: pointer; }
+        .nav-btn.active { background: #e11d48; border-color: #e11d48; }
+        .nav-btn-boss { background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; color: #fbbf24; }
+        
+        main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; flex: 1; width: 100%; }
+        
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: #16161e; border: 1px solid #262635; border-radius: 12px; padding: 1rem; }
+        .stat-card p { font-size: 0.75rem; color: #9ca3af; font-weight: bold; }
+        .stat-card h2 { font-size: 1.4rem; color: #fff; margin-top: 4px; }
+        
+        .panel { background: #16161e; border: 1px solid #262635; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .panel-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+        th { border-bottom: 1px solid #262635; padding: 10px; color: #9ca3af; text-transform: uppercase; font-size: 0.75rem; }
+        td { border-bottom: 1px solid rgba(38, 38, 53, 0.5); padding: 10px; color: #e5e7eb; }
+        
+        .btn-sm { padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; }
+        .btn-danger { background: #991b1b; color: #fff; }
+        .btn-pay { background: #059669; color: #fff; }
+        
+        footer { text-align: center; padding: 1rem; font-size: 0.75rem; color: #6b7280; border-top: 1px solid #262635; }
+    </style>
+
+    <!-- SDK Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <!-- PORTAIL D'ACCÈS -->
+    <div id="loginGate" class="modal-bg">
+        <div class="glass-card">
+            <h1 class="title">REAPER <span>MOTORS</span></h1>
+            <p class="subtitle">Espace Gestion Concessionnaire</p>
+
+            <div class="tab-btn-group">
+                <button type="button" id="btnTabLogin" onclick="openAuthTab('login')" class="tab-btn active">Connexion</button>
+                <button type="button" id="btnTabRegister" onclick="openAuthTab('register')" class="tab-btn">Inscription</button>
+            </div>
+
+            <!-- CONTENEUR CONNEXION -->
+            <div id="boxLogin">
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="loginUser" placeholder="ex: Jax Teller">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="loginPass" placeholder="••••••••">
+                </div>
+                <div id="loginErr" class="alert-error"></div>
+                <button type="button" onclick="doLogin()" class="btn-submit">SE CONNECTER</button>
+            </div>
+
+            <!-- CONTENEUR INSCRIPTION -->
+            <div id="boxRegister" class="hidden">
+                <div class="form-group">
+                    <label>Votre Nom</label>
+                    <input type="text" id="regUser" placeholder="ex: Trevor">
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="regPass" placeholder="••••••••">
+                </div>
+                <div id="regErr" class="alert-error"></div>
+                <button type="button" onclick="doRegister()" class="btn-submit btn-green">CRÉER COMPTE & ENTRER</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP SITE -->
+    <header>
+        <h1 class="title" style="font-size: 1.2rem; text-align: left; margin: 0;">REAPER <span>MOTORS</span></h1>
+        <nav>
+            <button onclick="navTo('dash')" id="nav-dash" class="nav-btn active">Tableau de bord</button>
+            <button onclick="navTo('boss')" id="nav-boss" class="nav-btn nav-btn-boss hidden">Panel Patron</button>
+        </nav>
+        <div>
+            <span id="userBadge" style="font-size: 0.8rem; font-weight: bold; margin-right: 10px;"></span>
+            <button onclick="logout()" class="btn-sm btn-danger">Quitter</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- TABLEAU DE BORD UNIQUE -->
+        <div id="view-dash">
+            <div class="grid-stats">
+                <div class="stat-card"><p>Chiffre d'Affaires Global</p><h2 id="stCA" style="color:#10b981;">$0</h2></div>
+                <div class="stat-card"><p>Ventes Totales Garage</p><h2 id="stSales">0</h2></div>
+                <div class="stat-card"><p>Salaire</p><h2 id="stCom" style="color:#fbbf24;">$0</h2></div>
+                <div class="stat-card"><p>Top Vendeur</p><h2 id="stTopSeller" style="color:#e11d48; font-size:1.1rem; margin-top:8px;">Aucun</h2></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Editer une vente</div>
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                        <label>Vendeur</label>
+                        <input type="text" id="dashSaleSeller" readonly style="color: #fbbf24; font-weight: bold; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group" style="flex: 2; min-width: 200px; margin-bottom: 0;">
+                        <label>Sélectionner la Moto</label>
+                        <select id="dashSaleBike"></select>
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 130px; margin-bottom: 0;">
+                        <label>Réduction</label>
+                        <select id="dashSaleDiscount" style="color: #10b981; font-weight: bold;">
+                            <option value="0">Aucune (0%)</option>
+                            <option value="0.05">- 5%</option>
+                            <option value="0.10">- 10%</option>
+                            <option value="0.15">- 15%</option>
+                            <option value="0.20">- 20%</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="doSale()" class="btn-submit" style="margin-top: 0; height: 42px; flex: 1; min-width: 150px;">VALIDER LA VENTE</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title"><span>Registre des Ventes</span></div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Modèle Moto</th>
+                                <th>Vendeur</th>
+                                <th>Prix Vente</th>
+                                <th>Commission</th>
+                                <th id="thAction">Actions Patron</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashRegTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL PATRON -->
+        <div id="view-boss" class="hidden">
+            <div class="grid-stats" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 1.5rem;">
+                <div class="stat-card"><p>Chiffre d'affaire</p><h2 id="bossTotalSales" style="color: #10b981;">$0</h2></div>
+                <div class="stat-card"><p>Achats Motos (Stock)</p><h2 id="bossTotalCost" style="color: #ef4444;">$0</h2></div>
+                <div class="stat-card"><p>Total Salaires</p><h2 id="bossTotalSalaries" style="color: #f59e0b;">$0</h2></div>
+                <div class="stat-card"><p>Résultat Net</p><h2 id="bossNetResult" style="color: #3b82f6;">$0</h2></div>
+                <div class="stat-card" style="border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.05);"><p style="color: #fbbf24;">Impôts (30% de Marge - Salaire)</p><h2 id="bossTaxes" style="color: #fbbf24;">$0</h2></div>
+            </div>
+
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div class="panel-title" style="margin: 0; color: #fbbf24;">Panel Direction & Paies</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="resetAccounting()" class="btn-sm btn-danger" style="padding: 8px 12px;">RàZ COMPTABILITÉ</button>
+                        <button onclick="payAll()" class="btn-sm btn-pay" style="padding: 8px 12px;">TOUT PAYER</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vendeur</th>
+                                <th>Grade</th>
+                                <th>Salaire</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bossTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title" style="color: #3b82f6;">Historique des Ventes Archivées (Total / Vendeur)</div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date du RàZ</th>
+                                <th>Vendeur</th>
+                                <th>Nombre de Ventes</th>
+                                <th>Chiffre d'Affaires Archivé</th>
+                                <th>Total Commissions Archivées</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bossArchiveTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>&copy; Reaper Motors - Management Live</footer>
+
+    <script>
+        // CONFIGURATION FIREBASE INTÉGRÉE
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtOocGgWcieONJejNvyIJE99r4bPxPTmQ",
+            authDomain: "reaper-motors.firebaseapp.com",
+            databaseURL: "https://reaper-motors-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "reaper-motors",
+            storageBucket: "reaper-motors.firebasestorage.app",
+            messagingSenderId: "388168670767",
+            appId: "1:388168670767:web:addd444d1c497c3aac70da",
+            measurementId: "G-B2K8QC8FD0"
+        };
+
+        // Initialisation de Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const GRADES = { 'Recrue': 0.3, 'Vendeur': 0.5, 'Responsable': 0.8, 'Co-Patron': 0.10, 'Patron': 0.12 };
+        const BIKES = [
+            { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
+            { id: 'b2', name: 'BF400', price: 120000, buyPrice: 80000 },
+            { id: 'b3', name: 'Western Gargoyle', price: 55000, buyPrice: 40000 },
+            { id: 'b5', name: 'Bagger', price: 30000, buyPrice: 20000 },
+            { id: 'b6', name: 'Bati 801', price: 75000, buyPrice: 50000 },
+            { id: 'b7', name: 'Bati 801RR', price: 105000, buyPrice: 70000 },
+            { id: 'b8', name: 'Blazer', price: 10500, buyPrice: 7000 },
+            { id: 'b9', name: 'Blazer Street', price: 22500, buyPrice: 15000 },
+            { id: 'b10', name: 'Carbon RS', price: 52500, buyPrice: 35000 },
+            { id: 'b11', name: 'Chimera', price: 90000, buyPrice: 60000 },
+            { id: 'b12', name: 'Cliffhanger', price: 127500, buyPrice: 85000 },
+            { id: 'b13', name: 'Deamon', price: 112500, buyPrice: 75000 },
+            { id: 'b14', name: 'Deamon V2', price: 187500, buyPrice: 125000 },
+            { id: 'b15', name: 'Defiler', price: 142500, buyPrice: 95000 },
+            { id: 'b16', name: 'Diabolus', price: 97500, buyPrice: 65000 },
+            { id: 'b17', name: 'Double T', price: 52500, buyPrice: 35000 },
+            { id: 'b18', name: 'Esskey', price: 112500, buyPrice: 75000 },
+            { id: 'b19', name: 'Faggio', price: 6750, buyPrice: 4500 },
+            { id: 'b20', name: 'Faggio sport', price: 2850, buyPrice: 1900 },
+            { id: 'b21', name: 'FCR 1000', price: 450000, buyPrice: 300000 },
+            { id: 'b22', name: 'Gargoyle', price: 112500, buyPrice: 75000 },
+            { id: 'b23', name: 'Hakuchou', price: 120000, buyPrice: 80000 },
+            { id: 'b24', name: 'Hakuchou Drag', price: 127500, buyPrice: 85000 },
+            { id: 'b25', name: 'Maibatsu Sanchez', price: 28000, buyPrice: 20000 },
+            { id: 'b26', name: 'Hexer', price: 22500, buyPrice: 15000 },
+            { id: 'b27', name: 'Inconnu', price: 90000, buyPrice: 60000 },
+            { id: 'b28', name: 'Inconnu V2', price: 22500, buyPrice: 15000 },
+            { id: 'b29', name: 'Innovation', price: 30000, buyPrice: 20000 },
+            { id: 'b30', name: 'MMT Frakas', price: 45000, buyPrice: 30000 },
+            { id: 'b31', name: 'Manchez', price: 37500, buyPrice: 25000 },
+            { id: 'b32', name: 'Nemesis', price: 37500, buyPrice: 25000 },
+            { id: 'b33', name: 'Nightblade', price: 525000, buyPrice: 350000 },
+            { id: 'b34', name: 'PCJ 600', price: 37500, buyPrice: 25000 },
+            { id: 'b35', name: 'Reever', price: 52500, buyPrice: 35000 },
+            { id: 'b36', name: 'Ruffian', price: 37500, buyPrice: 25000 },
+            { id: 'b37', name: 'Sanchez', price: 41250, buyPrice: 27500 },
+            { id: 'b38', name: 'Sanchez Couleur', price: 37500, buyPrice: 25000 },
+            { id: 'b39', name: 'Sanctus', price: 600000, buyPrice: 400000 },
+            { id: 'b40', name: 'Shinobi', price: 75000, buyPrice: 50000 },
+            { id: 'b41', name: 'Sovereign', price: 300000, buyPrice: 200000 },
+            { id: 'b42', name: 'Stryder', price: 150000, buyPrice: 100000 },
+            { id: 'b43', name: 'Thrust', price: 33000, buyPrice: 22000 },
+            { id: 'b44', name: 'Vader', price: 22500, buyPrice: 15000 },
+            { id: 'b45', name: 'Vortex', price: 30000, buyPrice: 20000 },
+            { id: 'b46', name: 'Wolfsbane', price: 37500, buyPrice: 25000 },
+            { id: 'b47', name: 'Zombie Bobber', price: 37500, buyPrice: 25000 }
+        ];
+
+        let sellers = [];
+        let sales = [];
+        let archives = [];
+        let currentUser = null;
+
+        // Synchronisation en temps réel avec Firebase
+        db.ref('reaper_data').on('value', snapshot => {
+            const data = snapshot.val();
+            if (data) {
+                sellers = data.sellers || [];
+                sales = data.sales || [];
+                archives = data.archives || [];
+            } else {
+                sellers = [
+                    { id: '1', name: 'Jax Teller', pass: '1234', grade: 'Patron', com: 0 },
+                    { id: '2', name: 'Bastien Barre', pass: '1234', grade: 'Responsable', com: 0 }
+                ];
+                saveToCloud();
+            }
+            if (currentUser) renderApp();
+        });
+
+        function saveToCloud() {
+            db.ref('reaper_data').set({ sellers, sales, archives });
+        }
+
+        function openAuthTab(mode) {
+            document.getElementById('loginErr').style.display = 'none';
+            document.getElementById('regErr').style.display = 'none';
+
+            if (mode === 'login') {
+                document.getElementById('boxLogin').classList.remove('hidden');
+                document.getElementById('boxRegister').classList.add('hidden');
+                document.getElementById('btnTabLogin').className = 'tab-btn active';
+                document.getElementById('btnTabRegister').className = 'tab-btn';
+            } else {
+                document.getElementById('boxLogin').classList.add('hidden');
+                document.getElementById('boxRegister').classList.remove('hidden');
+                document.getElementById('btnTabRegister').className = 'tab-btn active';
+                document.getElementById('btnTabLogin').className = 'tab-btn';
+            }
+        }
+
+        function doLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            const err = document.getElementById('loginErr');
+
+            if (!u || !p) {
+                err.innerText = "Veuillez remplir tous les champs.";
+                err.style.display = 'block';
+                return;
+            }
+
+            const match = sellers.find(s => s.name.toLowerCase() === u.toLowerCase() && s.pass === p);
+            if (match) {
+                currentUser = match;
+                startSession();
+            } else {
+                err.innerText = "Nom ou mot de passe incorrect.";
+                err.style.display = 'block';
+            }
+        }
+
+        function doRegister() {
+            const u = document.getElementById('regUser').value.trim();
+            const p = document.getElementById('regPass').value.trim();
+            const err = document.getElementById('regErr');
+
+            if (!u || !p) {
+                err.innerText = "Veuillez remplir tous les champs.";
+                err.style.display = 'block';
+                return;
+            }
+
+            if (sellers.some(s => s.name.toLowerCase() === u.toLowerCase())) {
+                err.innerText = "Ce Nom est déjà enregistré.";
+                err.style.display = 'block';
+                return;
+            }
+
+            const newUser = { id: 'u_' + Date.now(), name: u, pass: p, grade: 'Recrue', com: 0 };
+            sellers.push(newUser);
+            currentUser = newUser;
+            saveToCloud();
+            startSession();
+        }
+
+        function startSession() {
+            document.getElementById('loginGate').classList.add('hidden');
+            document.getElementById('userBadge').innerText = `${currentUser.name} (${currentUser.grade})`;
+            document.getElementById('dashSaleSeller').value = currentUser.name;
+
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            document.getElementById('nav-boss').classList.toggle('hidden', !isBoss);
+
+            const bikesHtml = BIKES.map(b => `<option value="${b.id}">${b.name} - $${b.price.toLocaleString()}</option>`).join('');
+            document.getElementById('dashSaleBike').innerHTML = bikesHtml;
+
+            renderApp();
+            navTo('dash');
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginGate').classList.remove('hidden');
+        }
+
+        function navTo(tab) {
+            ['dash', 'boss'].forEach(t => {
+                const el = document.getElementById('view-' + t);
+                const btn = document.getElementById('nav-' + t);
+                if(el) el.classList.add('hidden');
+                if(btn) btn.classList.remove('active');
+            });
+            document.getElementById('view-' + tab).classList.remove('hidden');
+            document.getElementById('nav-' + tab).classList.add('active');
+        }
+
+        function renderApp() {
+            const freshUser = sellers.find(s => s.id === currentUser.id);
+            if (freshUser) {
+                currentUser = freshUser;
+                document.getElementById('userBadge').innerText = `${currentUser.name} (${currentUser.grade})`;
+                const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+                document.getElementById('nav-boss').classList.toggle('hidden', !isBoss);
+            }
+
+            const totalCA = sales.reduce((a, b) => a + b.price, 0);
+            const totalBuyCost = sales.reduce((a, b) => a + (b.buyPrice || 0), 0);
+            const totalCommissions = sales.reduce((a, b) => a + b.com, 0);
+            
+            const totalStoreMargin = totalCA - totalBuyCost;
+            const taxableSum = Math.max(0, totalStoreMargin - totalCommissions);
+            const taxesDue = Math.round(taxableSum * 0.30);
+            const netResult = totalStoreMargin - totalCommissions - taxesDue;
+
+            document.getElementById('stCA').innerText = `$${totalCA.toLocaleString()}`;
+            document.getElementById('stSales').innerText = sales.length;
+            document.getElementById('stCom').innerText = `$${(currentUser.com || 0).toLocaleString()}`;
+
+            const counts = {};
+            sales.forEach(s => counts[s.seller] = (counts[s.seller] || 0) + 1);
+            let topName = "Aucun";
+            let topCount = 0;
+            for(let name in counts) {
+                if(counts[name] > topCount) {
+                    topCount = counts[name];
+                    topName = name;
+                }
+            }
+            document.getElementById('stTopSeller').innerText = topName !== "Aucun" ? `${topName} (${topCount}v)` : "Aucun";
+
+            const elSales = document.getElementById('bossTotalSales');
+            const elCost = document.getElementById('bossTotalCost');
+            const elSalaries = document.getElementById('bossTotalSalaries');
+            const elNet = document.getElementById('bossNetResult');
+            const elTaxes = document.getElementById('bossTaxes');
+
+            if(elSales) elSales.innerText = `$${totalCA.toLocaleString()}`;
+            if(elCost) elCost.innerText = `$${totalBuyCost.toLocaleString()}`;
+            if(elSalaries) elSalaries.innerText = `$${totalCommissions.toLocaleString()}`;
+            if(elNet) elNet.innerText = `$${netResult.toLocaleString()}`;
+            if(elTaxes) elTaxes.innerText = `$${taxesDue.toLocaleString()}`;
+
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+
+            const dashRegBody = document.getElementById('dashRegTable');
+            if (sales.length === 0) {
+                dashRegBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6b7280;">Aucune vente enregistrée.</td></tr>`;
+            } else {
+                dashRegBody.innerHTML = sales.map(s => {
+                    const discountBadge = s.discount > 0 ? `<span style="font-size:0.7rem; color:#10b981; margin-left:4px;">(-${s.discount * 100}%)</span>` : '';
+                    return `
+                    <tr>
+                        <td style="font-size:0.75rem; color:#9ca3af;">${s.date}</td>
+                        <td style="font-weight:bold; color:#e11d48;">${s.bike}</td>
+                        <td>${s.seller}</td>
+                        <td style="color:#10b981; font-weight:bold;">$${s.price.toLocaleString()} ${discountBadge}</td>
+                        <td style="color:#fbbf24; font-weight:bold;">$${s.com.toLocaleString()}</td>
+                        <td>${isBoss ? `<button onclick="deleteSale('${s.id}')" class="btn-sm btn-danger">Supprimer</button>` : '-'}</td>
+                    </tr>
+                    `;
+                }).join('');
+            }
+
+            const bossBody = document.getElementById('bossTable');
+            if(bossBody) {
+                const gradeOptions = Object.keys(GRADES).map(g => `<option value="${g}">${g}</option>`).join('');
+                bossBody.innerHTML = sellers.map(s => `
+                    <tr>
+                        <td style="font-weight:bold;">${s.name}</td>
+                        <td>
+                            <select onchange="updateSellerGrade('${s.id}', this.value)" style="background:#000; border:1px solid #262635; color:#fbbf24; padding:4px 8px; border-radius:6px; font-weight:bold; outline:none;">
+                                ${gradeOptions.replace(`value="${s.grade}"`, `value="${s.grade}" selected`)}
+                            </select>
+                        </td>
+                        <td style="color:#10b981; font-weight:bold;">$${(s.com || 0).toLocaleString()}</td>
+                        <td>
+                            <button onclick="paySeller('${s.id}')" class="btn-sm btn-pay">Payer</button>
+                            <button onclick="deleteSeller('${s.id}')" class="btn-sm btn-danger" style="margin-left:4px;">Supprimer</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            const bossArchiveBody = document.getElementById('bossArchiveTable');
+            if (bossArchiveBody) {
+                if (archives.length === 0) {
+                    bossArchiveBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#6b7280;">Aucune archive pour le moment.</td></tr>`;
+                } else {
+                    bossArchiveBody.innerHTML = archives.map(a => `
+                        <tr>
+                            <td style="font-size:0.75rem; color:#9ca3af;">${a.razDate}</td>
+                            <td style="font-weight:bold;">${a.seller}</td>
+                            <td>${a.count}</td>
+                            <td style="color:#10b981; font-weight:bold;">$${a.totalCA.toLocaleString()}</td>
+                            <td style="color:#fbbf24; font-weight:bold;">$${a.totalCom.toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+
+        function updateSellerGrade(sellerId, newGrade) {
+            const seller = sellers.find(s => s.id === sellerId);
+            if (seller) {
+                seller.grade = newGrade;
+                saveToCloud();
+            }
+        }
+
+        function doSale() {
+            const bId = document.getElementById('dashSaleBike').value;
+            const discountRate = parseFloat(document.getElementById('dashSaleDiscount').value) || 0;
+            const bike = BIKES.find(b => b.id === bId);
+            if (!bike) return;
+
+            const finalPrice = Math.round(bike.price * (1 - discountRate));
+            const totalDiscountAmount = bike.price - finalPrice;
+            const discountShare = Math.round(totalDiscountAmount * 0.5);
+
+            const baseMargin = Math.max(0, bike.price - bike.buyPrice);
+            const gradeRate = GRADES[currentUser.grade] || 0.3;
+            const baseSalary = baseMargin * gradeRate;
+            const com = Math.max(0, Math.round(baseSalary - discountShare));
+
+            const newSale = {
+                id: 's_' + Date.now(),
+                date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
+                bike: bike.name,
+                price: finalPrice,
+                buyPrice: bike.buyPrice,
+                discount: discountRate,
+                com: com,
+                seller: currentUser.name
+            };
+
+            sales.unshift(newSale);
+            const matchSeller = sellers.find(s => s.id === currentUser.id);
+            if (matchSeller) matchSeller.com = (matchSeller.com || 0) + com;
+
+            saveToCloud();
+            navTo('dash');
+        }
+
+        function deleteSale(saleId) {
+            if (confirm("Supprimer cette vente du registre ?")) {
+                const idx = sales.findIndex(s => s.id === saleId);
+                if (idx !== -1) {
+                    const s = sales[idx];
+                    const sellerObj = sellers.find(x => x.name === s.seller);
+                    if (sellerObj) sellerObj.com = Math.max(0, (sellerObj.com || 0) - s.com);
+
+                    sales.splice(idx, 1);
+                    saveToCloud();
+                }
+            }
+        }
+
+        function deleteSeller(sellerId) {
+            if (confirm("Supprimer ce vendeur de la liste ?")) {
+                sellers = sellers.filter(s => s.id !== sellerId);
+                saveToCloud();
+            }
+        }
+
+        function paySeller(sellerId) {
+            const seller = sellers.find(s => s.id === sellerId);
+            if (seller) {
+                seller.com = 0;
+                saveToCloud();
+            }
+        }
+
+        function payAll() {
+            sellers.forEach(s => s.com = 0);
+            saveToCloud();
+        }
+
+        function resetAccounting() {
+            if (confirm("Voulez-vous réinitialiser la comptabilité ? (Le total des ventes sera archivé avec la date du jour et synchronisé en direct)")) {
+                if (sales.length > 0) {
+                    const nowString = new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                    
+                    const currentBatchMap = {};
+                    sales.forEach(s => {
+                        if (!currentBatchMap[s.seller]) {
+                            currentBatchMap[s.seller] = { razDate: nowString, seller: s.seller, count: 0, totalCA: 0, totalCom: 0 };
+                        }
+                        currentBatchMap[s.seller].count += 1;
+                        currentBatchMap[s.seller].totalCA += s.price;
+                        currentBatchMap[s.seller].totalCom += s.com;
+                    });
+
+                    for (let sellerName in currentBatchMap) {
+                        archives.unshift(currentBatchMap[sellerName]);
+                    }
+                }
+
+                sales = [];
+                sellers.forEach(s => s.com = 0);
+                saveToCloud();
+            }
+        }
+    </script>
+</body>
+</html>
