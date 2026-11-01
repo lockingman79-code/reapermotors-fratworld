@@ -147,7 +147,7 @@
                         <input type="text" id="dashSaleSeller" readonly style="color: #fbbf24; font-weight: bold; cursor: not-allowed;">
                     </div>
                     <div class="form-group" style="flex: 2; min-width: 200px; margin-bottom: 0;">
-                        <label>Sélectionner le véhicule</label>
+                        <label>Sélectionner la moto</label>
                         <select id="dashSaleBike"></select>
                     </div>
                     <div class="form-group" style="flex: 1; min-width: 130px; margin-bottom: 0;">
@@ -187,7 +187,7 @@
         <div id="view-boss" class="hidden">
             <div class="grid-stats" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 1.5rem;">
                 <div class="stat-card"><p>Chiffre d'affaire</p><h2 id="bossTotalSales" style="color: #10b981;">$0</h2></div>
-                <div class="stat-card"><p>Achats véhicule</p><h2 id="bossTotalCost" style="color: #ef4444;">$0</h2></div>
+                <div class="stat-card"><p>Achats Motos</p><h2 id="bossTotalCost" style="color: #ef4444;">$0</h2></div>
                 <div class="stat-card"><p>Total Salaires</p><h2 id="bossTotalSalaries" style="color: #f59e0b;">$0</h2></div>
                 <div class="stat-card"><p>Résultat Net</p><h2 id="bossNetResult" style="color: #3b82f6;">$0</h2></div>
                 <div class="stat-card" style="border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.05);"><p style="color: #fbbf24;">Impôts (30% de Marge - Salaire)</p><h2 id="bossTaxes" style="color: #fbbf24;">$0</h2></div>
@@ -257,12 +257,6 @@
 
         const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.4, 'Responsable': 0.7, 'Co-Patron': 1, 'Patron': 1 };
         const BIKES = [
-             // Vélos
-            { id: 'v1', name: ' BMX', price: 2250, buyPrice: 1500 },
-            { id: 'v2', name: ' Cruiser', price: 750, buyPrice: 500 },
-            { id: 'v3', name: ' Fixter', price: 375, buyPrice: 250 },
-            { id: 'v4', name: ' Tri-Cycles Race Bike', price: 450, buyPrice: 300 }
-            // Motos
             { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
             { id: 'b2', name: 'Avarus', price: 65000, buyPrice: 97500 },
             { id: 'b3', name: 'BF400', price: 120000, buyPrice: 80000 },
