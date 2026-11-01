@@ -260,7 +260,7 @@
         
         const BIKES = [
             { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
-            { id: 'b2', name: 'Avarus', price: 65000, buyPrice: 97500 },
+            { id: 'b2', name: 'Avarus', price: 65000, buyPrice: 45000 },
             { id: 'b3', name: 'BF400', price: 120000, buyPrice: 80000 },
             { id: 'b4', name: 'Gargoyle', price: 55000, buyPrice: 40000 },
             { id: 'b5', name: 'Bagger', price: 30000, buyPrice: 20000 },
@@ -342,3 +342,298 @@
             if (mode === 'login') {
                 document.getElementById('boxLogin').classList.remove('hidden');
                 document.getElementById('boxRegister').classList.add('hidden');
+                document.getElementById('btnTabLogin').className = 'tab-btn active';
+                document.getElementById('btnTabRegister').className = 'tab-btn';
+            } else {
+                document.getElementById('boxLogin').classList.add('hidden');
+                document.getElementById('boxRegister').classList.remove('hidden');
+                document.getElementById('btnTabRegister').className = 'tab-btn active';
+                document.getElementById('btnTabLogin').className = 'tab-btn';
+            }
+        }
+
+        function doLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            const err = document.getElementById('loginErr');
+
+            if (!u || !p) {
+                err.innerText = "Veuillez remplir tous les champs.";
+                err.style.display = 'block';
+                return;
+            }
+
+            const match = sellers.find(s => s.name.toLowerCase() === u.toLowerCase() && s.pass === p);
+            if (match) {
+                currentUser = match;
+                startSession();
+            } else {
+                err.innerText = "Nom ou mot de passe incorrect.";
+                err.style.display = 'block';
+            }
+        }
+
+        function doRegister() {
+            const u = document.getElementById('regUser').value.trim();
+            const p = document.getElementById('regPass').value.trim();
+            const err = document.getElementById('regErr');
+
+            if (!u || !p) {
+                err.innerText = "Veuillez remplir tous les champs.";
+                err.style.display = 'block';
+                return;
+            }
+
+            if (sellers.some(s => s.name.toLowerCase() === u.toLowerCase())) {
+                err.innerText = "Ce Nom est déjà enregistré.";
+                err.style.display = 'block';
+                return;
+            }
+
+            const newUser = { id: 'u_' + Date.now(), name: u, pass: p, grade: 'Recrue', com: 0 };
+            sellers.push(newUser);
+            currentUser = newUser;
+            saveToCloud();
+            startSession();
+        }
+
+        function startSession() {
+            document.getElementById('loginGate').classList.add('hidden');
+            document.getElementById('userBadge').innerText = `${currentUser.name} (${currentUser.grade})`;
+            document.getElementById('dashSaleSeller').value = currentUser.name;
+
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            document.getElementById('nav-boss').classList.toggle('hidden', !isBoss);
+
+            const bikesHtml = BIKES.map(b => `<option value="${b.id}">${b.name} - $${b.price.toLocaleString()}</option>`).join('');
+            document.getElementById('dashSaleBike').innerHTML = bikesHtml;
+
+            renderApp();
+            navTo('dash');
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginGate').classList.remove('hidden');
+        }
+
+        function navTo(tab) {
+            ['dash', 'boss'].forEach(t => {
+                const el = document.getElementById('view-' + t);
+                const btn = document.getElementById('nav-' + t);
+                if(el) el.classList.add('hidden');
+                if(btn) btn.classList.remove('active');
+            });
+            document.getElementById('view-' + tab).classList.remove('hidden');
+            document.getElementById('nav-' + tab).classList.add('active');
+        }
+
+        function renderApp() {
+            const freshUser = sellers.find(s => s.id === currentUser.id);
+            if (freshUser) {
+                currentUser = freshUser;
+                document.getElementById('userBadge').innerText = `${currentUser.name} (${currentUser.grade})`;
+                const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+                document.getElementById('nav-boss').classList.toggle('hidden', !isBoss);
+            }
+
+            const totalCA = sales.reduce((a, b) => a + b.price, 0);
+            const totalBuyCost = sales.reduce((a, b) => a + (b.buyPrice || 0), 0);
+            const totalCommissions = sales.reduce((a, b) => a + b.com, 0);
+
+            const totalStoreMargin = totalCA - totalBuyCost;
+            const taxableSum = Math.max(0, totalStoreMargin - totalCommissions);
+            const taxesDue = Math.round(taxableSum * 0.30);
+            const netResult = totalStoreMargin - totalCommissions - taxesDue;
+
+            document.getElementById('stCA').innerText = `$${totalCA.toLocaleString()}`;
+            document.getElementById('stSales').innerText = sales.length;
+            document.getElementById('stCom').innerText = `$${(currentUser.com || 0).toLocaleString()}`;
+
+            const counts = {};
+            sales.forEach(s => counts[s.seller] = (counts[s.seller] || 0) + 1);
+            let topName = "Aucun";
+            let topCount = 0;
+            for(let name in counts) {
+                if(counts[name] > topCount) {
+                    topCount = counts[name];
+                    topName = name;
+                }
+            }
+            document.getElementById('stTopSeller').innerText = topName !== "Aucun" ? `${topName} (${topCount}v)` : "Aucun";
+
+            const elSales = document.getElementById('bossTotalSales');
+            const elCost = document.getElementById('bossTotalCost');
+            const elSalaries = document.getElementById('bossTotalSalaries');
+            const elNet = document.getElementById('bossNetResult');
+            const elTaxes = document.getElementById('bossTaxes');
+
+            if(elSales) elSales.innerText = `$${totalCA.toLocaleString()}`;
+            if(elCost) elCost.innerText = `$${totalBuyCost.toLocaleString()}`;
+            if(elSalaries) elSalaries.innerText = `$${totalCommissions.toLocaleString()}`;
+            if(elNet) elNet.innerText = `$${netResult.toLocaleString()}`;
+            if(elTaxes) elTaxes.innerText = `$${taxesDue.toLocaleString()}`;
+
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+
+            const dashRegBody = document.getElementById('dashRegTable');
+            if (sales.length === 0) {
+                dashRegBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6b7280;">Aucune vente enregistrée.</td></tr>`;
+            } else {
+                dashRegBody.innerHTML = sales.map(s => {
+                    const discountBadge = s.discount > 0 ? `<span style="font-size:0.7rem; color:#10b981; margin-left:4px;">(-${s.discount * 100}%)</span>` : '';
+                    return `
+                    <tr>
+                        <td style="font-size:0.75rem; color:#9ca3af;">${s.date}</td>
+                        <td style="font-weight:bold; color:#e11d48;">${s.bike}</td>
+                        <td>${s.seller}</td>
+                        <td style="color:#10b981; font-weight:bold;">$${s.price.toLocaleString()} ${discountBadge}</td>
+                        <td style="color:#fbbf24; font-weight:bold;">$${s.com.toLocaleString()}</td>
+                        <td>${isBoss ? `<button onclick="deleteSale('${s.id}')" class="btn-sm btn-danger">Supprimer</button>` : '-'}</td>
+                    </tr>
+                    `;
+                }).join('');
+            }
+
+            const bossBody = document.getElementById('bossTable');
+            if(bossBody) {
+                const gradeOptions = Object.keys(GRADES).map(g => `<option value="${g}">${g}</option>`).join('');
+                bossBody.innerHTML = sellers.map(s => `
+                    <tr>
+                        <td style="font-weight:bold;">${s.name}</td>
+                        <td>
+                            <select onchange="updateSellerGrade('${s.id}', this.value)" style="background:#000; border:1px solid #262635; color:#fbbf24; padding:4px 8px; border-radius:6px; font-weight:bold; outline:none;">
+                                ${gradeOptions.replace(`value="${s.grade}"`, `value="${s.grade}" selected`)}
+                            </select>
+                        </td>
+                        <td style="color:#10b981; font-weight:bold;">$${(s.com || 0).toLocaleString()}</td>
+                        <td>
+                            <button onclick="paySeller('${s.id}')" class="btn-sm btn-pay">Payer</button>
+                            <button onclick="deleteSeller('${s.id}')" class="btn-sm btn-danger" style="margin-left:4px;">Supprimer</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            const bossArchiveBody = document.getElementById('bossArchiveTable');
+            if (bossArchiveBody) {
+                if (archives.length === 0) {
+                    bossArchiveBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#6b7280;">Aucune archive pour le moment.</td></tr>`;
+                } else {
+                    bossArchiveBody.innerHTML = archives.map(a => `
+                        <tr>
+                            <td style="font-size:0.75rem; color:#9ca3af;">${a.razDate}</td>
+                            <td style="font-weight:bold;">${a.seller}</td>
+                            <td>${a.count}</td>
+                            <td style="color:#10b981; font-weight:bold;">$${a.totalCA.toLocaleString()}</td>
+                            <td style="color:#fbbf24; font-weight:bold;">$${a.totalCom.toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+
+        function updateSellerGrade(sellerId, newGrade) {
+            const seller = sellers.find(s => s.id === sellerId);
+            if (seller) {
+                seller.grade = newGrade;
+                saveToCloud();
+            }
+        }
+
+        function doSale() {
+            const bId = document.getElementById('dashSaleBike').value;
+            const discountRate = parseFloat(document.getElementById('dashSaleDiscount').value) || 0;
+            const bike = BIKES.find(b => b.id === bId);
+            if (!bike) return;
+
+            const finalPrice = Math.round(bike.price * (1 - discountRate));
+            const totalDiscountAmount = bike.price - finalPrice;
+            const discountShare = Math.round(totalDiscountAmount * 0.5);
+
+            const baseMargin = Math.max(0, bike.price - bike.buyPrice);
+            const gradeRate = GRADES[currentUser.grade] || 0.3;
+            const baseSalary = baseMargin * gradeRate;
+            const com = Math.max(0, Math.round(baseSalary - discountShare));
+
+            const newSale = {
+                id: 's_' + Date.now(),
+                date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
+                bike: bike.name,
+                price: finalPrice,
+                buyPrice: bike.buyPrice,
+                discount: discountRate,
+                com: com,
+                seller: currentUser.name
+            };
+
+            sales.unshift(newSale);
+            const matchSeller = sellers.find(s => s.id === currentUser.id);
+            if (matchSeller) matchSeller.com = (matchSeller.com || 0) + com;
+
+            saveToCloud();
+            navTo('dash');
+        }
+
+        function deleteSale(saleId) {
+            if (confirm("Supprimer cette vente du registre ?")) {
+                const idx = sales.findIndex(s => s.id === saleId);
+                if (idx !== -1) {
+                    const s = sales[idx];
+                    const sellerObj = sellers.find(x => x.name === s.seller);
+                    if (sellerObj) sellerObj.com = Math.max(0, (sellerObj.com || 0) - s.com);
+
+                    sales.splice(idx, 1);
+                    saveToCloud();
+                }
+            }
+        }
+
+        function deleteSeller(sellerId) {
+            if (confirm("Supprimer ce vendeur de la liste ?")) {
+                sellers = sellers.filter(s => s.id !== sellerId);
+                saveToCloud();
+            }
+        }
+
+        function paySeller(sellerId) {
+            const seller = sellers.find(s => s.id === sellerId);
+            if (seller) {
+                seller.com = 0;
+                saveToCloud();
+            }
+        }
+
+        function payAll() {
+            sellers.forEach(s => s.com = 0);
+            saveToCloud();
+        }
+
+        function resetAccounting() {
+            if (confirm("Voulez-vous réinitialiser la comptabilité ? (Le total des ventes sera archivé avec la date du jour et synchronisé en direct)")) {
+                if (sales.length > 0) {
+                    const nowString = new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                    
+                    const currentBatchMap = {};
+                    sales.forEach(s => {
+                        if (!currentBatchMap[s.seller]) {
+                            currentBatchMap[s.seller] = { razDate: nowString, seller: s.seller, count: 0, totalCA: 0, totalCom: 0 };
+                        }
+                        currentBatchMap[s.seller].count += 1;
+                        currentBatchMap[s.seller].totalCA += s.price;
+                        currentBatchMap[s.seller].totalCom += s.com;
+                    });
+
+                    for (let sellerName in currentBatchMap) {
+                        archives.unshift(currentBatchMap[sellerName]);
+                    }
+                }
+
+                sales = [];
+                sellers.forEach(s => s.com = 0);
+                saveToCloud();
+            }
+        }
+    </script>
+</body>
+</html>
