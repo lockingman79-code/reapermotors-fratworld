@@ -160,7 +160,7 @@
                             <option value="0.20">- 20%</option>
                         </select>
                     </div>
-                    <button type="button" onclick="doSale()" class="btn-submit" style="margin-top: 0; height: 42px; flex: 1; min-width: 150px;">VALIDER LA VENTE</button>
+                    <button type="button" onclick="doSale()" class="btn-submit" style="margin-top: 0; height: 42px; flex: 1; min-width: 150px;">VALIDER</button>
                 </div>
             </div>
 
@@ -175,7 +175,6 @@
                                 <th>Vendeur</th>
                                 <th>Prix Vente</th>
                                 <th>Commission</th>
-                                <th id="thAction">Actions Patron</th>
                             </tr>
                         </thead>
                         <tbody id="dashRegTable"></tbody>
@@ -256,8 +255,15 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const GRADES = { 'Recrue': 0.3, 'Vendeur': 0.5, 'Responsable': 0.7, 'Co-Patron': 0.9, 'Patron': 1 };
+        const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.4, 'Responsable': 0.7, 'Co-Patron': 1, 'Patron': 1 };
         const BIKES = [
+             // Vélos
+            { id: 'v1', name: ' BMX', price: 2250, buyPrice: 1500 },
+            { id: 'v2', name: ' Cruiser', price: 750, buyPrice: 500 },
+            { id: 'v3', name: ' Fixter', price: 375, buyPrice: 250 },
+            { id: 'v4', name: ' Tri-Cycles Race Bike', price: 450, buyPrice: 300 }
+            
+            // Motos
             { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
             { id: 'b2', name: 'Avarus', price: 65000, buyPrice: 97500 },
             { id: 'b3', name: 'BF400', price: 120000, buyPrice: 80000 },
