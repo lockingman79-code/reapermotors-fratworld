@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaper Motors - Accueil & Catalogue</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+
+        body { 
+            background: linear-gradient(rgba(13, 13, 17, 0.90), rgba(13, 13, 17, 0.96)), 
+                        url('https://img.freepik.com/premium-photo/grim-reaper-riding-motorcycle-with-flames_1148129-30563.jpg?w=996') no-repeat center center fixed;
+            background-size: cover;
+            color: #f3f4f6; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+        }
+
+        .hidden { display: none !important; }
+
+        /* HEADER */
+        header { 
+            background: #000000; 
+            border-bottom: 1px solid #262635; 
+            padding: 1.2rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .brand-title { font-size: 1.6rem; font-weight: 900; color: #fff; letter-spacing: 1px; }
+        .brand-title span { color: #e16b1d; }
+        .btn-back { background: #16161e; border: 1px solid #262635; color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+        .btn-back:hover { border-color: #e16b1d; color: #e16b1d; }
+
+        /* ACCUEIL - CARTES FLOTTANTES */
+        .hero-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+            padding: 3rem 1.5rem;
+            flex: 1;
+        }
+
+        .floating-card {
+            background: rgba(22, 22, 30, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(225, 107, 29, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .floating-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(225, 107, 29, 0.35);
+            border-color: #e16b1d;
+        }
+
+        .card-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+        .card-title { font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 0.6rem; }
+        .card-desc { font-size: 0.85rem; color: #9ca3af; line-height: 1.4; margin-bottom: 1.5rem; }
+        
+        .card-btn {
+            display: inline-block;
+            width: 100%;
+            background: #e16b1d;
+            color: #fff;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .card-btn:hover { background: #c55a15; }
+
+        /* CATALOGUE VÉHICULES */
+        .catalog-section { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; width: 100%; flex: 1; }
+        .section-header { text-align: center; margin-bottom: 2rem; }
+        .section-header h2 { font-size: 2rem; font-weight: 900; color: #fff; }
+        .section-header p { color: #9ca3af; font-size: 0.9rem; margin-top: 4px; }
+
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .vehicle-card {
+            background: #16161e;
+            border: 1px solid #262635;
+            border-radius: 14px;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .vehicle-card:hover { transform: translateY(-4px); border-color: #e16b1d; }
+
+        .vehicle-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .vehicle-info { padding: 1.2rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .vehicle-name { font-size: 1.1rem; font-weight: bold; color: #fff; margin-bottom: 0.4rem; }
+        .vehicle-price { font-size: 1.3rem; font-weight: 900; color: #10b981; margin-bottom: 1rem; }
+
+        /* MODALE DETAILS VÉHICULE */
+        .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .detail-card { background: #16161e; border: 1px solid #e16b1d; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 500px; }
+        .detail-img { width: 100%; height: 240px; object-fit: cover; border-radius: 10px; margin-bottom: 1rem; }
+
+        footer { text-align: center; padding: 1.2rem; font-size: 0.75rem; color: #6b7280; border-top: 1px solid #262635; background: #000; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="brand-title">REAPER <span>MOTORS</span></div>
+        <button id="btnBackHome" class="btn-back hidden" onclick="showView('home')">← Retour à l'accueil</button>
+    </header>
+
+    <!-- ACCUEIL PRINCIPAL (2 FENÊTRES FLOTTANTES) -->
+    <main id="view-home" class="hero-container">
+        <!-- Fenêtre 1 : Espace Vendeur -->
+        <div class="floating-card" onclick="window.location.href='index.html'">
+            <span class="card-icon">💼</span>
+            <h2 class="card-title">Espace Vendeurs</h2>
+            <p class="card-desc">Accès sécurisé pour la gestion des ventes.</p>
+            <button class="card-btn">SE CONNECTER</button>
+        </div>
+
+        <!-- Fenêtre 2 : Catalogue Clients -->
+        <div class="floating-card" onclick="showView('catalog')">
+            <span class="card-icon">🏍️</span>
+            <h2 class="card-title">Catalogue Véhicules</h2>
+            <p class="card-desc">Découvrez notre gamme complète de motos, vélos disponibles à la vente.</p>
+            <button class="card-btn" style="background: #e11d48;">PARCOURIR LE CATALOGUE</button>
+        </div>
+    </main>
+
+    <!-- VUE CATALOGUE CLIENTS -->
+    <main id="view-catalog" class="catalog-section hidden">
+        <div class="section-header">
+            <h2><span style="color: #e16b1d;">Notre Catalogue</span></h2>
+            <p>Consultez nos prix</p>
+            <p><strong><span style="color: #ff0000;">ATTENTION :</span> L'achat de moto est soumis à l'obtention du permis de conduire. Le magasin n'est pas responsable en cas de défaut de celui-ci.</strong></p>
+        </div>
+
+        <div id="vehicleGrid" class="vehicle-grid"></div>
+    </main>
+
+    <!-- MODALE FICHES DETAILS -->
+    <div id="detailModal" class="modal-bg hidden">
+        <div class="detail-card">
+            <img id="detailImg" class="detail-img" src="" alt="Véhicule">
+            <h3 id="detailName" class="card-title" style="text-align: left;"></h3>
+            <p id="detailPrice" class="vehicle-price"></p>
+            <p id="detailDesc" class="card-desc" style="text-align: left; margin-bottom: 1.5rem;"></p>
+            <button class="card-btn" onclick="closeModal()">Fermer</button>
+        </div>
+    </div>
+
+    <footer>&copy; Reaper Motors - Concessionnaire Officiel</footer>
+
+    <script>
+        // CATALOGUE VÉHICULES
+        const CATALOG_VEHICLES = [
+            { id: 1, name: "🏍️ Akuma", price: 52500, img: "vehicule/akuma.png", desc: "Moto sportive agile avec une excellente accélération." },
+            { id: 2, name: "🏍️ Avarus", price: 65000, img: "vehicule/Avarus.png", desc: "Moto Chopper milieux de game." },
+            { id: 3, name: "🏍️ BF400", price: 120000, img: "vehicule/BF400.png", desc: "Moto mi tout terrain mi routiere." },
+            { id: 4, name: "🏍️ Bagger", price: 30000, img: "vehicule/Bagger.png", desc: "Moto de balade." },
+            { id: 5, name: "🏍️ Bati 801", price: 30000, img: "vehicule/Bati801.png", desc: "Moto de course ." },
+            { id: 6, name: "🏍️ Bati 801RR", price: 75000, img: "vehicule/Bati801RR.png", desc: "Moto de course aux couleur de vos écuries favorite." },
+            { id: 7, name: "🏍️ Blazzer", price: 10500, img: "vehicule/Blazzer.png", desc: "Quad tout terrain ." },
+            { id: 8, name: "🏍️ Blazzer Street", price: 22500, img: "vehicule/Blazzer street.png", desc: "Quad plus épuré fait pour la ville  ." },
+            { id: 9, name: "🏍️ Carbon RS", price: 52500, img: "vehicule/Carbon RS.png", desc: "Moto sportive avec de bonne performance." },
+            { id: 10, name: "🏍️ Chimera", price: 90000, img: "vehicule/Chimera.png", desc: "Style vintage avec 3 roues." },
+            { id: 11, name: "🏍️ Cliffhanger", price: 127500, img: "vehicule/Cliffhanger.png", desc: "Tout terrain style retro." },
+            { id: 12, name: "🏍️ Daemon", price: 112500, img: "vehicule/Daemon.png", desc: "Moto chopper vintage." },
+            { id: 13, name: "🏍️ Daemon V2", price: 187500, img: "vehicule/Daemon V2.png", desc: "Moto chpper vintage." },
+            { id: 14, name: "🏍️ Defiler", price: 142500, img: "vehicule/Defiler.png", desc: "Moto épurée au design agressif." },
+            { id: 15, name: "🏍️ Diabolus", price: 97500, img: "vehicule/Diabolus.png", desc: "Moto routière classique." },
+            { id: 16, name: "🏍️ Double T", price: 52500, img: "vehicule/Double T.png", desc: "Moto sportive haute performance." },
+            { id: 17, name: "🏍️ Esskey", price: 112500, img: "vehicule/Esskey.png", desc: "Petite routière légère et agile." },
+            { id: 18, name: "🏍️ Faggio", price: 6750, img: "vehicule/Faggio.png", desc: "Scooter passe partout." },
+            { id: 19, name: "🏍️ Faggio Sport", price: 2850, img: "vehicule/Faggio sport.png", desc: "Scooter passe partout." },
+            { id: 20, name: "🏍️ FCR 1000", price: 450000, img: "vehicule/FCR1000.png", desc: "Coffee racer au belle performance." },
+            { id: 21, name: "🏍️ Gargoyle", price: 112500, img: "vehicule/Gargoyle.png", desc: "Moto tout-terrain haute performance pour franchir tous les obstacles." },
+            { id: 22, name: "🏍️ Hakuchou", price: 120000, img: "vehicule/Hakuchou.png", desc: "Sportive japonnaise." },
+            { id: 23, name: "🏍️ Hakuchou Drag", price: 127500, img: "vehicule/Hakuchou Drag.png", desc: "Sportive japonnaise préparer pour le DRAG." },
+            { id: 25, name: "🏍️ Hexer", price: 22500, img: "vehicule/Hexer.png", desc: "Chpper entrée de gamme." },
+            { id: 26, name: "🏍️ Inconnu", price: 90000, img: "vehicule/Inconnue.png", desc: "Fauteuille Roulant." },
+            { id: 27, name: "🏍️ Inconnu V2", price: 22500, img: "vehicule/Inconnue v2.png", desc: "Trotinette électrique." },
+            { id: 28, name: "🏍️ MMT Frakas", price: 45000, img: "vehicule/MMT Frakas.png", desc: "Scooter de plage" },
+            { id: 29, name: "🏍️ Manchez", price: 37500, img: "vehicule/Manchez.png", desc: "Moto tout-terrain milieu de gamme pour franchir tous les obstacles." },
+            { id: 30, name: "🏍️ Nemesis", price: 37500, img: "vehicule/Nemesis.png", desc: "Moto de ville légère et agile." },
+            { id: 31, name: "🏍️ NightBlade", price: 525000, img: "vehicule/Nightblade.png", desc: "Chopper exclusif Reaper Motors au design agressif." },
+            { id: 32, name: "🏍️ PCJ 600", price: 37500, img: "vehicule/PCJ 600.png", desc: "Moto de ville légère et maniable." },
+            { id: 33, name: "🏍️ Reever", price: 52500, img: "vehicule/Reever.png", desc: "Coffee racer au ligne futuriste." },
+            { id: 34, name: "🏍️ Ruffian", price: 37500, img: "vehicule/Ruffian.png", desc: "Moto de ville classique." },
+            { id: 35, name: "🏍️ Sanchez", price: 41250, img: "vehicule/Sanchez.png", desc: "Moto cross entrée de gamme ." },
+            { id: 36, name: "🏍️ Sanchez Couleur", price: 37500, img: "vehicule/Sanchez couleur.png", desc: "Moto cross entrée de game au couleurs de vos écuries favorite." },
+            { id: 37, name: "🏍️ Sanctus", price: 600000, img: "vehicule/Sanctus.png", desc: "Chopper haut de game au look remarquable." },
+            { id: 38, name: "🏍️ Shinobi", price: 75000, img: "vehicule/Shinobi.png", desc: "Moto sportive passe partout." },
+            { id: 39, name: "🏍️ Sovereign", price: 300000, img: "vehicule/Sovereign.png", desc: "Moto de route style police ameriquaine." },
+            { id: 40, name: "🏍️ Stryder", price: 150000, img: "vehicule/Stryder.png", desc: "Moto 3 roues pour la route." },
+            { id: 41, name: "🏍️ Thrust", price: 33000, img: "vehicule/Thrust.png", desc: "Moto routiere au design agressif." },
+            { id: 42, name: "🏍️ Vader", price: 22500, img: "vehicule/Vader.png", desc: "Moto classique légère et maniable." },
+            { id: 43, name: "🏍️ Vortex", price: 30000, img: "vehicule/Vortex.png", desc: "Coffee racer épurée." },
+            { id: 44, name: "🏍️ Wolfsbane", price: 37500, img: "vehicule/Wolfsbane.png", desc: "Coffee racer retro." },
+            { id: 45, name: "🏍️ Zombie Bobber", price: 33000, img: "vehicule/Zombie Bobber.png", desc: "Excelence du chopper 1 place ." },
+            { id: 46, name: "🏍️ Zombie Chopper", price: 37500, img: "vehicule/Zombie Chopper.png", desc: "Excelence du chopper 2 places." }
+        ];
+
+        function showView(view) {
+            if (view === 'catalog') {
+                document.getElementById('view-home').classList.add('hidden');
+                document.getElementById('view-catalog').classList.remove('hidden');
+                document.getElementById('btnBackHome').classList.remove('hidden');
+                renderCatalog();
+            } else {
+                document.getElementById('view-catalog').classList.add('hidden');
+                document.getElementById('view-home').classList.remove('hidden');
+                document.getElementById('btnBackHome').classList.add('hidden');
+            }
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('vehicleGrid');
+            grid.innerHTML = CATALOG_VEHICLES.map(v => `
+                <div class="vehicle-card" onclick="openModal(${v.id})">
+                    <img class="vehicle-img" src="${v.img}" alt="${v.name}">
+                    <div class="vehicle-info">
+                        <div>
+                            <div class="vehicle-name">${v.name}</div>
+                            <div class="vehicle-price">$${v.price.toLocaleString()}</div>
+                        </div>
+                        <button class="card-btn" style="padding: 8px; font-size: 0.8rem;">Voir détails</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(id) {
+            const vehicle = CATALOG_VEHICLES.find(v => v.id === id);
+            if (!vehicle) return;
+
+            document.getElementById('detailImg').src = vehicle.img;
+            document.getElementById('detailName').innerText = vehicle.name;
+            document.getElementById('detailPrice').innerText = `$${vehicle.price.toLocaleString()}`;
+            document.getElementById('detailDesc').innerText = vehicle.desc;
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
