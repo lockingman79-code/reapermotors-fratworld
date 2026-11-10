@@ -165,7 +165,7 @@
             </div>
 
             <div class="panel">
-                <div class="panel-title"><span id="regTitle">Registre des Ventes</span></div>
+                <div class="panel-title"><span>Registre des Ventes</span></div>
                 <div style="overflow-x: auto;">
                     <table>
                         <thead>
@@ -208,6 +208,7 @@
                             <tr>
                                 <th>Vendeur</th>
                                 <th>Grade</th>
+                                <th>RIB (Demander un copié coller ) </th>
                                 <th>Salaire</th>
                                 <th>Action</th>
                             </tr>
@@ -256,56 +257,57 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.4, 'Responsable': 0.7, 'Co-Patron': 1, 'Patron': 1 };
+        const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.45, 'Responsable': 0.7, 'Co-Patron': 1, 'Patron': 1 };
         
         const BIKES = [
             { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
             { id: 'b2', name: 'Avarus', price: 65000, buyPrice: 45000 },
             { id: 'b3', name: 'BF400', price: 120000, buyPrice: 80000 },
-            { id: 'b4', name: 'Bagger', price: 30000, buyPrice: 20000 },
-            { id: 'b5', name: 'Bati 801', price: 75000, buyPrice: 50000 },
-            { id: 'b6', name: 'Bati 801RR', price: 105000, buyPrice: 70000 },
-            { id: 'b7', name: 'Blazer', price: 10500, buyPrice: 7000 },
-            { id: 'b8', name: 'Blazer Street', price: 22500, buyPrice: 15000 },
-            { id: 'b9', name: 'Carbon RS', price: 52500, buyPrice: 35000 },
-            { id: 'b10', name: 'Chimera', price: 90000, buyPrice: 60000 },
-            { id: 'b11', name: 'Cliffhanger', price: 127500, buyPrice: 85000 },
-            { id: 'b12', name: 'Deamon', price: 112500, buyPrice: 75000 },
-            { id: 'b13', name: 'Deamon V2', price: 187500, buyPrice: 125000 },
-            { id: 'b14', name: 'Defiler', price: 142500, buyPrice: 95000 },
-            { id: 'b15', name: 'Diabolus', price: 97500, buyPrice: 65000 },
-            { id: 'b16', name: 'Double T', price: 52500, buyPrice: 35000 },
-            { id: 'b17', name: 'Esskey', price: 112500, buyPrice: 75000 },
-            { id: 'b18', name: 'Faggio', price: 6750, buyPrice: 4500 },
-            { id: 'b19', name: 'Faggio sport', price: 2850, buyPrice: 1900 },
-            { id: 'b20', name: 'FCR 1000', price: 450000, buyPrice: 300000 },
-            { id: 'b21', name: 'Gargoyle', price: 112500, buyPrice: 75000 },
-            { id: 'b22', name: 'Hakuchou', price: 120000, buyPrice: 80000 },
-            { id: 'b23', name: 'Hakuchou Drag', price: 127500, buyPrice: 85000 },
-            { id: 'b24', name: 'Maibatsu Sanchez', price: 28000, buyPrice: 20000 },
-            { id: 'b25', name: 'Hexer', price: 22500, buyPrice: 15000 },
-            { id: 'b26', name: 'Inconnu', price: 90000, buyPrice: 60000 },
-            { id: 'b27', name: 'Inconnu V2', price: 22500, buyPrice: 15000 },
-            { id: 'b28', name: 'Innovation', price: 30000, buyPrice: 20000 },
-            { id: 'b29', name: 'MMT Frakas', price: 45000, buyPrice: 30000 },
-            { id: 'b30', name: 'Manchez', price: 37500, buyPrice: 25000 },
-            { id: 'b31', name: 'Nemesis', price: 37500, buyPrice: 25000 },
-            { id: 'b32', name: 'Nightblade', price: 525000, buyPrice: 350000 },
-            { id: 'b33', name: 'PCJ 600', price: 37500, buyPrice: 25000 },
-            { id: 'b34', name: 'Reever', price: 52500, buyPrice: 35000 },
-            { id: 'b35', name: 'Ruffian', price: 37500, buyPrice: 25000 },
-            { id: 'b36', name: 'Sanchez', price: 41250, buyPrice: 27500 },
-            { id: 'b37', name: 'Sanchez Couleur', price: 37500, buyPrice: 25000 },
-            { id: 'b38', name: 'Sanctus', price: 600000, buyPrice: 400000 },
-            { id: 'b39', name: 'Shinobi', price: 75000, buyPrice: 50000 },
-            { id: 'b40', name: 'Sovereign', price: 300000, buyPrice: 200000 },
-            { id: 'b41', name: 'Stryder', price: 150000, buyPrice: 100000 },
-            { id: 'b42', name: 'Thrust', price: 33000, buyPrice: 22000 },
-            { id: 'b43', name: 'Vader', price: 22500, buyPrice: 15000 },
-            { id: 'b44', name: 'Vortex', price: 30000, buyPrice: 20000 },
-            { id: 'b45', name: 'Wolfsbane', price: 37500, buyPrice: 25000 },
-            { id: 'b46', name: 'Zombie Bobber', price: 33000, buyPrice: 22000 },
-            { id: 'b47', name: 'Zombie Chopper', price: 37500, buyPrice: 25000 }
+            { id: 'b4', name: 'Gargoyle', price: 55000, buyPrice: 40000 },
+            { id: 'b5', name: 'Bagger', price: 30000, buyPrice: 20000 },
+            { id: 'b6', name: 'Bati 801', price: 75000, buyPrice: 50000 },
+            { id: 'b7', name: 'Bati 801RR', price: 105000, buyPrice: 70000 },
+            { id: 'b8', name: 'Blazer', price: 10500, buyPrice: 7000 },
+            { id: 'b9', name: 'Blazer Street', price: 22500, buyPrice: 15000 },
+            { id: 'b10', name: 'Carbon RS', price: 52500, buyPrice: 35000 },
+            { id: 'b11', name: 'Chimera', price: 90000, buyPrice: 60000 },
+            { id: 'b12', name: 'Cliffhanger', price: 127500, buyPrice: 85000 },
+            { id: 'b13', name: 'Deamon', price: 112500, buyPrice: 75000 },
+            { id: 'b14', name: 'Deamon V2', price: 187500, buyPrice: 125000 },
+            { id: 'b15', name: 'Defiler', price: 142500, buyPrice: 95000 },
+            { id: 'b16', name: 'Diabolus', price: 97500, buyPrice: 65000 },
+            { id: 'b17', name: 'Double T', price: 52500, buyPrice: 35000 },
+            { id: 'b18', name: 'Esskey', price: 112500, buyPrice: 75000 },
+            { id: 'b19', name: 'Faggio', price: 6750, buyPrice: 4500 },
+            { id: 'b20', name: 'Faggio sport', price: 2850, buyPrice: 1900 },
+            { id: 'b21', name: 'FCR 1000', price: 450000, buyPrice: 300000 },
+            { id: 'b22', name: 'Gargoyle', price: 112500, buyPrice: 75000 },
+            { id: 'b23', name: 'Hakuchou', price: 120000, buyPrice: 80000 },
+            { id: 'b24', name: 'Hakuchou Drag', price: 127500, buyPrice: 85000 },
+            { id: 'b25', name: 'Maibatsu Sanchez', price: 28000, buyPrice: 20000 },
+            { id: 'b26', name: 'Hexer', price: 22500, buyPrice: 15000 },
+            { id: 'b27', name: 'Inconnu', price: 90000, buyPrice: 60000 },
+            { id: 'b28', name: 'Inconnu V2', price: 22500, buyPrice: 15000 },
+            { id: 'b29', name: 'Innovation', price: 30000, buyPrice: 20000 },
+            { id: 'b30', name: 'MMT Frakas', price: 45000, buyPrice: 30000 },
+            { id: 'b31', name: 'Manchez', price: 37500, buyPrice: 25000 },
+            { id: 'b32', name: 'Nemesis', price: 37500, buyPrice: 25000 },
+            { id: 'b33', name: 'Nightblade', price: 525000, buyPrice: 350000 },
+            { id: 'b34', name: 'PCJ 600', price: 37500, buyPrice: 25000 },
+            { id: 'b35', name: 'Reever', price: 52500, buyPrice: 35000 },
+            { id: 'b36', name: 'Ruffian', price: 37500, buyPrice: 25000 },
+            { id: 'b37', name: 'Sanchez', price: 41250, buyPrice: 27500 },
+            { id: 'b38', name: 'Sanchez Couleur', price: 37500, buyPrice: 25000 },
+            { id: 'b39', name: 'Sanctus', price: 600000, buyPrice: 400000 },
+            { id: 'b40', name: 'Shinobi', price: 75000, buyPrice: 50000 },
+            { id: 'b41', name: 'Sovereign', price: 300000, buyPrice: 200000 },
+            { id: 'b42', name: 'Stryder', price: 150000, buyPrice: 100000 },
+            { id: 'b43', name: 'Thrust', price: 33000, buyPrice: 22000 },
+            { id: 'b44', name: 'Vader', price: 22500, buyPrice: 15000 },
+            { id: 'b45', name: 'Vortex', price: 30000, buyPrice: 20000 },
+            { id: 'b46', name: 'Wolfsbane', price: 37500, buyPrice: 25000 },
+            { id: 'b47', name: 'Zombie Bobber', price: 33000, buyPrice: 22000 },
+            { id: 'b48', name: 'Zombie Chopper', price: 37500, buyPrice: 25000 }
         ];
 
         let sellers = [];
@@ -322,8 +324,8 @@
                 archives = data.archives || [];
             } else {
                 sellers = [
-                    { id: '1', name: 'Jax Teller', pass: '1234', grade: 'Patron', com: 0 },
-                    { id: '2', name: 'Bastien Barre', pass: '1234', grade: 'Responsable', com: 0 }
+                    { id: '1', name: 'Jax Teller', pass: '1234', grade: 'Patron', com: 0, rib: '' },
+                    { id: '2', name: 'Bastien Barre', pass: '1234', grade: 'Responsable', com: 0, rib: '' }
                 ];
                 saveToCloud();
             }
@@ -389,7 +391,7 @@
                 return;
             }
 
-            const newUser = { id: 'u_' + Date.now(), name: u, pass: p, grade: 'Recrue', com: 0 };
+            const newUser = { id: 'u_' + Date.now(), name: u, pass: p, grade: 'Recrue', com: 0, rib: '' };
             sellers.push(newUser);
             currentUser = newUser;
             saveToCloud();
@@ -475,16 +477,11 @@
 
             const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
 
-            // FILTRAGE DU REGISTRE : Les vendeurs ne voient que leurs ventes, les patrons voient tout
-            const displayedSales = isBoss ? sales : sales.filter(s => s.seller.toLowerCase() === currentUser.name.toLowerCase());
-            
-            document.getElementById('regTitle').innerText = isBoss ? "Registre des Ventes (Global - Toutes les ventes)" : "Mes Ventes Réalisées";
-
             const dashRegBody = document.getElementById('dashRegTable');
-            if (displayedSales.length === 0) {
+            if (sales.length === 0) {
                 dashRegBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6b7280;">Aucune vente enregistrée.</td></tr>`;
             } else {
-                dashRegBody.innerHTML = displayedSales.map(s => {
+                dashRegBody.innerHTML = sales.map(s => {
                     const discountBadge = s.discount > 0 ? `<span style="font-size:0.7rem; color:#10b981; margin-left:4px;">(-${s.discount * 100}%)</span>` : '';
                     return `
                     <tr>
@@ -502,21 +499,28 @@
             const bossBody = document.getElementById('bossTable');
             if(bossBody) {
                 const gradeOptions = Object.keys(GRADES).map(g => `<option value="${g}">${g}</option>`).join('');
-                bossBody.innerHTML = sellers.map(s => `
+                bossBody.innerHTML = sellers.map(s => {
+                    // Si l'utilisateur connecté est Patron/Co-Patron, le champ RIB est modifiable. Sinon, il est en lecture seule ou masqué/bloqué.
+                    const ribInput = isBoss 
+                        ? `<input type="text" value="${s.rib || ''}" placeholder="Entrer RIB..." onchange="updateSellerRIB('${s.id}', this.value)" style="background:#000; border:1px solid #262635; color:#fff; padding:4px 8px; border-radius:6px; width:100%; outline:none;">`
+                        : `<span style="color:#9ca3af; font-style:italic;">${s.rib || 'Non renseigné'}</span>`;
+
+                    return `
                     <tr>
                         <td style="font-weight:bold;">${s.name}</td>
                         <td>
-                            <select onchange="updateSellerGrade('${s.id}', this.value)" style="background:#000; border:1px solid #262635; color:#fbbf24; padding:4px 8px; border-radius:6px; font-weight:bold; outline:none;">
+                            <select onchange="updateSellerGrade('${s.id}', this.value)" style="background:#000; border:1px solid #262635; color:#fbbf24; padding:4px 8px; border-radius:6px; font-weight:bold; outline:none;" ${!isBoss ? 'disabled' : ''}>
                                 ${gradeOptions.replace(`value="${s.grade}"`, `value="${s.grade}" selected`)}
                             </select>
                         </td>
+                        <td>${ribInput}</td>
                         <td style="color:#10b981; font-weight:bold;">$${(s.com || 0).toLocaleString()}</td>
                         <td>
-                            <button onclick="paySeller('${s.id}')" class="btn-sm btn-pay">Payer</button>
-                            <button onclick="deleteSeller('${s.id}')" class="btn-sm btn-danger" style="margin-left:4px;">Supprimer</button>
+                            ${isBoss ? `<button onclick="paySeller('${s.id}')" class="btn-sm btn-pay">Payer</button>
+                            <button onclick="deleteSeller('${s.id}')" class="btn-sm btn-danger" style="margin-left:4px;">Supprimer</button>` : '-'}
                         </td>
                     </tr>
-                `).join('');
+                `}).join('');
             }
 
             const bossArchiveBody = document.getElementById('bossArchiveTable');
@@ -538,9 +542,24 @@
         }
 
         function updateSellerGrade(sellerId, newGrade) {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) return;
             const seller = sellers.find(s => s.id === sellerId);
             if (seller) {
                 seller.grade = newGrade;
+                saveToCloud();
+            }
+        }
+
+        function updateSellerRIB(sellerId, newRib) {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) {
+                alert("Action interdite : Seuls les patrons peuvent modifier le RIB.");
+                return;
+            }
+            const seller = sellers.find(s => s.id === sellerId);
+            if (seller) {
+                seller.rib = newRib;
                 saveToCloud();
             }
         }
@@ -580,6 +599,8 @@
         }
 
         function deleteSale(saleId) {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) return;
             if (confirm("Supprimer cette vente du registre ?")) {
                 const idx = sales.findIndex(s => s.id === saleId);
                 if (idx !== -1) {
@@ -594,6 +615,8 @@
         }
 
         function deleteSeller(sellerId) {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) return;
             if (confirm("Supprimer ce vendeur de la liste ?")) {
                 sellers = sellers.filter(s => s.id !== sellerId);
                 saveToCloud();
@@ -601,6 +624,8 @@
         }
 
         function paySeller(sellerId) {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) return;
             const seller = sellers.find(s => s.id === sellerId);
             if (seller) {
                 seller.com = 0;
@@ -609,11 +634,15 @@
         }
 
         function payAll() {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) return;
             sellers.forEach(s => s.com = 0);
             saveToCloud();
         }
 
         function resetAccounting() {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) return;
             if (confirm("Voulez-vous réinitialiser la comptabilité ? (Le total des ventes sera archivé avec la date du jour et synchronisé en direct)")) {
                 if (sales.length > 0) {
                     const nowString = new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
