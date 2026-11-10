@@ -107,6 +107,14 @@
                     <input type="text" id="regUser" placeholder="ex: Trevor">
                 </div>
                 <div class="form-group">
+                    <label>Numéro de Téléphone</label>
+                    <input type="text" id="regPhone" placeholder="ex: 555-0199">
+                </div>
+                <div class="form-group">
+                    <label>RIB</label>
+                    <input type="text" id="regRib" placeholder="ex: FR76...">
+                </div>
+                <div class="form-group">
                     <label>Mot de passe</label>
                     <input type="password" id="regPass" placeholder="••••••••">
                 </div>
@@ -137,6 +145,21 @@
                 <div class="stat-card"><p>Ventes Totales Garage</p><h2 id="stSales">0</h2></div>
                 <div class="stat-card"><p>Salaire</p><h2 id="stCom" style="color:#fbbf24;">$0</h2></div>
                 <div class="stat-card"><p>Top Vendeur</p><h2 id="stTopSeller" style="color:#e11d48; font-size:1.1rem; margin-top:8px;">Aucun</h2></div>
+            </div>
+
+            <!-- MODIFICATION INFOS PERSONNELLES VENDEUR -->
+            <div class="panel">
+                <div class="panel-title" style="color: #3b82f6;">Mes Informations Personnelles (Modifiables)</div>
+                <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                        <label>Mon Téléphone</label>
+                        <input type="text" id="myPhoneInput" onchange="updateMyInfo()" placeholder="Votre téléphone">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                        <label>Mon RIB</label>
+                        <input type="text" id="myRibInput" onchange="updateMyInfo()" placeholder="Votre RIB">
+                    </div>
+                </div>
             </div>
 
             <div class="panel">
@@ -208,7 +231,8 @@
                             <tr>
                                 <th>Vendeur</th>
                                 <th>Grade</th>
-                                <th>RIB (Demander un copié coller ) </th>
+                                <th>Téléphone</th>
+                                <th>RIB</th>
                                 <th>Salaire</th>
                                 <th>Action</th>
                             </tr>
@@ -324,8 +348,8 @@
                 archives = data.archives || [];
             } else {
                 sellers = [
-                    { id: '1', name: 'Jax Teller', pass: '1234', grade: 'Patron', com: 0, rib: '' },
-                    { id: '2', name: 'Bastien Barre', pass: '1234', grade: 'Responsable', com: 0, rib: '' }
+                    { id: '1', name: 'Jax Teller', pass: '1234', grade: 'Patron', com: 0, phone: '555-0100', rib: 'FR76-1234' },
+                    { id: '2', name: 'Bastien Barre', pass: '1234', grade: 'Responsable', com: 0, phone: '555-0200', rib: 'FR76-5678' }
                 ];
                 saveToCloud();
             }
@@ -376,11 +400,13 @@
 
         function doRegister() {
             const u = document.getElementById('regUser').value.trim();
+            const ph = document.getElementById('regPhone').value.trim();
+            const rb = document.getElementById('regRib').value.trim();
             const p = document.getElementById('regPass').value.trim();
             const err = document.getElementById('regErr');
 
-            if (!u || !p) {
-                err.innerText = "Veuillez remplir tous les champs.";
+            if (!u || !ph || !rb || !p) {
+                err.innerText = "Veuillez remplir tous les champs (Nom, Téléphone, RIB, Mot de passe).";
                 err.style.display = 'block';
                 return;
             }
@@ -391,7 +417,7 @@
                 return;
             }
 
-            const newUser = { id: 'u_' + Date.now(), name: u, pass: p, grade: 'Recrue', com: 0, rib: '' };
+            const newUser = { id: 'u_' + Date.now(), name: u, pass: p, grade: 'Recrue', com: 0, phone: ph, rib: rb };
             sellers.push(newUser);
             currentUser = newUser;
             saveToCloud();
@@ -403,6 +429,9 @@
             document.getElementById('userBadge').innerText = `${currentUser.name} (${currentUser.grade})`;
             document.getElementById('dashSaleSeller').value = currentUser.name;
 
+            document.getElementById('myPhoneInput').value = currentUser.phone || '';
+            document.getElementById('myRibInput').value = currentUser.rib || '';
+
             const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
             document.getElementById('nav-boss').classList.toggle('hidden', !isBoss);
 
@@ -411,6 +440,22 @@
 
             renderApp();
             navTo('dash');
+        }
+
+        function updateMyInfo() {
+            if (!currentUser) return;
+            const newPhone = document.getElementById('myPhoneInput').value.trim();
+            const newRib = document.getElementById('myRibInput').value.trim();
+
+            currentUser.phone = newPhone;
+            currentUser.rib = newRib;
+
+            const sellerObj = sellers.find(s => s.id === currentUser.id);
+            if (sellerObj) {
+                sellerObj.phone = newPhone;
+                sellerObj.rib = newRib;
+                saveToCloud();
+            }
         }
 
         function logout() {
@@ -499,13 +544,7 @@
             const bossBody = document.getElementById('bossTable');
             if(bossBody) {
                 const gradeOptions = Object.keys(GRADES).map(g => `<option value="${g}">${g}</option>`).join('');
-                bossBody.innerHTML = sellers.map(s => {
-                    // Si l'utilisateur connecté est Patron/Co-Patron, le champ RIB est modifiable. Sinon, il est en lecture seule ou masqué/bloqué.
-                    const ribInput = isBoss 
-                        ? `<input type="text" value="${s.rib || ''}" placeholder="Entrer RIB..." onchange="updateSellerRIB('${s.id}', this.value)" style="background:#000; border:1px solid #262635; color:#fff; padding:4px 8px; border-radius:6px; width:100%; outline:none;">`
-                        : `<span style="color:#9ca3af; font-style:italic;">${s.rib || 'Non renseigné'}</span>`;
-
-                    return `
+                bossBody.innerHTML = sellers.map(s => `
                     <tr>
                         <td style="font-weight:bold;">${s.name}</td>
                         <td>
@@ -513,14 +552,15 @@
                                 ${gradeOptions.replace(`value="${s.grade}"`, `value="${s.grade}" selected`)}
                             </select>
                         </td>
-                        <td>${ribInput}</td>
+                        <td style="color:#9ca3af;">${s.phone || 'Non renseigné'}</td>
+                        <td style="color:#9ca3af;">${s.rib || 'Non renseigné'}</td>
                         <td style="color:#10b981; font-weight:bold;">$${(s.com || 0).toLocaleString()}</td>
                         <td>
                             ${isBoss ? `<button onclick="paySeller('${s.id}')" class="btn-sm btn-pay">Payer</button>
                             <button onclick="deleteSeller('${s.id}')" class="btn-sm btn-danger" style="margin-left:4px;">Supprimer</button>` : '-'}
                         </td>
                     </tr>
-                `}).join('');
+                `).join('');
             }
 
             const bossArchiveBody = document.getElementById('bossArchiveTable');
@@ -547,19 +587,6 @@
             const seller = sellers.find(s => s.id === sellerId);
             if (seller) {
                 seller.grade = newGrade;
-                saveToCloud();
-            }
-        }
-
-        function updateSellerRIB(sellerId, newRib) {
-            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
-            if (!isBoss) {
-                alert("Action interdite : Seuls les patrons peuvent modifier le RIB.");
-                return;
-            }
-            const seller = sellers.find(s => s.id === sellerId);
-            if (seller) {
-                seller.rib = newRib;
                 saveToCloud();
             }
         }
