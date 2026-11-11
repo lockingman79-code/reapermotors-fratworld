@@ -129,6 +129,7 @@
         <h1 class="title" style="font-size: 1.2rem; text-align: left; margin: 0;">REAPER <span>MOTORS</span></h1>
         <nav>
             <button onclick="navTo('dash')" id="nav-dash" class="nav-btn active">Tableau de bord</button>
+            <button onclick="navTo('contacts')" id="nav-contacts" class="nav-btn">Contacts</button>
             <button onclick="navTo('boss')" id="nav-boss" class="nav-btn nav-btn-boss hidden">Panel Patron</button>
         </nav>
         <div>
@@ -165,15 +166,19 @@
             <div class="panel">
                 <div class="panel-title">Editer une vente</div>
                 <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                    <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                    <div class="form-group" style="flex: 1; min-width: 140px; margin-bottom: 0;">
                         <label>Vendeur</label>
                         <input type="text" id="dashSaleSeller" readonly style="color: #fbbf24; font-weight: bold; cursor: not-allowed;">
                     </div>
-                    <div class="form-group" style="flex: 2; min-width: 200px; margin-bottom: 0;">
+                    <div class="form-group" style="flex: 2; min-width: 180px; margin-bottom: 0;">
                         <label>Sélectionner le Véhicule</label>
                         <select id="dashSaleBike"></select>
                     </div>
-                    <div class="form-group" style="flex: 1; min-width: 130px; margin-bottom: 0;">
+                    <div class="form-group" style="flex: 0.8; min-width: 90px; margin-bottom: 0;">
+                        <label>Quantité</label>
+                        <input type="number" id="dashSaleQty" value="1" min="1" style="font-weight: bold; color: #3b82f6;">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 120px; margin-bottom: 0;">
                         <label>Réduction</label>
                         <select id="dashSaleDiscount" style="color: #10b981; font-weight: bold;">
                             <option value="0">Aucune (0%)</option>
@@ -181,9 +186,15 @@
                             <option value="0.10">- 10%</option>
                             <option value="0.15">- 15%</option>
                             <option value="0.20">- 20%</option>
+                            <option value="0.25">- 25%</option>
+                            <option value="0.30">- 30%</option>
+                            <option value="0.35">- 35%</option>
+                            <option value="0.40">- 40%</option>
+                            <option value="0.45">- 45%</option>
+                            <option value="0.50">- 50%</option>
                         </select>
                     </div>
-                    <button type="button" onclick="doSale()" class="btn-submit" style="margin-top: 0; height: 42px; flex: 1; min-width: 150px;">VALIDER LA VENTE</button>
+                    <button type="button" onclick="doSale()" class="btn-submit" style="margin-top: 0; height: 42px; flex: 1; min-width: 140px;">VALIDER LA VENTE</button>
                 </div>
             </div>
 
@@ -195,13 +206,33 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Modèle Véhicule</th>
+                                <th>Qté</th>
                                 <th>Vendeur</th>
-                                <th>Prix Vente</th>
+                                <th>Prix Total</th>
                                 <th>Commission</th>
                                 <th id="thAction">Actions Patron</th>
                             </tr>
                         </thead>
                         <tbody id="dashRegTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGLET CONTACTS ACCESSIBLE À TOUS -->
+        <div id="view-contacts" class="hidden">
+            <div class="panel">
+                <div class="panel-title" style="color: #3b82f6;">Annuaire des Contacts de l'Entreprise</div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nom / Prénom</th>
+                                <th>Grade</th>
+                                <th>Numéro de Téléphone</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contactsTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -299,7 +330,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.3, 'Responsable': 0.5, 'Co-Patron': 0.8, 'Patron': 0.8 };
+        const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.4, 'Responsable': 0.6, 'Co-Patron': 0.8, 'Patron': 0.8 };
         
         const BIKES = [
             { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
@@ -484,14 +515,16 @@
         }
 
         function navTo(tab) {
-            ['dash', 'boss'].forEach(t => {
+            ['dash', 'contacts', 'boss'].forEach(t => {
                 const el = document.getElementById('view-' + t);
                 const btn = document.getElementById('nav-' + t);
-                if(el) el.classList.add('hidden');
-                if(btn) btn.classList.remove('active');
+                if (el) el.classList.add('hidden');
+                if (btn) btn.classList.remove('active');
             });
-            document.getElementById('view-' + tab).classList.remove('hidden');
-            document.getElementById('nav-' + tab).classList.add('active');
+            const targetEl = document.getElementById('view-' + tab);
+            const targetBtn = document.getElementById('nav-' + tab);
+            if (targetEl) targetEl.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('active');
         }
 
         function renderApp() {
@@ -513,11 +546,11 @@
             const netResult = totalStoreMargin - totalCommissions - taxesDue;
 
             document.getElementById('stCA').innerText = `$${totalCA.toLocaleString()}`;
-            document.getElementById('stSales').innerText = sales.length;
+            document.getElementById('stSales').innerText = sales.reduce((a, b) => a + (b.qty || 1), 0);
             document.getElementById('stCom').innerText = `$${(currentUser.com || 0).toLocaleString()}`;
 
             const counts = {};
-            sales.forEach(s => counts[s.seller] = (counts[s.seller] || 0) + 1);
+            sales.forEach(s => counts[s.seller] = (counts[s.seller] || 0) + (s.qty || 1));
             let topName = "Aucun";
             let topCount = 0;
             for(let name in counts) {
@@ -544,14 +577,16 @@
 
             const dashRegBody = document.getElementById('dashRegTable');
             if (sales.length === 0) {
-                dashRegBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#6b7280;">Aucune vente enregistrée.</td></tr>`;
+                dashRegBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#6b7280;">Aucune vente enregistrée.</td></tr>`;
             } else {
                 dashRegBody.innerHTML = sales.map(s => {
+                    const qty = s.qty || 1;
                     const discountBadge = s.discount > 0 ? `<span style="font-size:0.7rem; color:#10b981; margin-left:4px;">(-${s.discount * 100}%)</span>` : '';
                     return `
                     <tr>
                         <td style="font-size:0.75rem; color:#9ca3af;">${s.date}</td>
                         <td style="font-weight:bold; color:#e11d48;">${s.bike}</td>
+                        <td style="font-weight:bold; color:#3b82f6;">x${qty}</td>
                         <td>${s.seller}</td>
                         <td style="color:#10b981; font-weight:bold;">$${s.price.toLocaleString()} ${discountBadge}</td>
                         <td style="color:#fbbf24; font-weight:bold;">$${s.com.toLocaleString()}</td>
@@ -559,6 +594,22 @@
                     </tr>
                     `;
                 }).join('');
+            }
+
+            // RENDU DU TABLEAU CONTACTS
+            const contactsBody = document.getElementById('contactsTableBody');
+            if (contactsBody) {
+                if (sellers.length === 0) {
+                    contactsBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#6b7280;">Aucun membre dans l'annuaire.</td></tr>`;
+                } else {
+                    contactsBody.innerHTML = sellers.map(s => `
+                        <tr>
+                            <td style="font-weight:bold; color:#fff;">${s.name}</td>
+                            <td style="color:#fbbf24; font-weight:bold;">${s.grade || 'Recrue'}</td>
+                            <td style="color:#10b981; font-weight:bold;">${s.phone || 'Non renseigné'}</td>
+                        </tr>
+                    `).join('');
+                }
             }
 
             const bossBody = document.getElementById('bossTable');
@@ -645,15 +696,18 @@
 
         function doSale() {
             const bId = document.getElementById('dashSaleBike').value;
+            const qty = parseInt(document.getElementById('dashSaleQty').value) || 1;
             const discountRate = parseFloat(document.getElementById('dashSaleDiscount').value) || 0;
             const bike = BIKES.find(b => b.id === bId);
-            if (!bike) return;
+            if (!bike || qty < 1) return;
 
-            const finalPrice = Math.round(bike.price * (1 - discountRate));
-            const totalDiscountAmount = bike.price - finalPrice;
+            const singleFinalPrice = Math.round(bike.price * (1 - discountRate));
+            const finalPrice = singleFinalPrice * qty;
+            
+            const totalDiscountAmount = (bike.price - singleFinalPrice) * qty;
             const discountShare = Math.round(totalDiscountAmount * 0.5);
 
-            const baseMargin = Math.max(0, bike.price - bike.buyPrice);
+            const baseMargin = Math.max(0, (bike.price - bike.buyPrice) * qty);
             const gradeRate = GRADES[currentUser.grade] || 0.3;
             const baseSalary = baseMargin * gradeRate;
             const com = Math.max(0, Math.round(baseSalary - discountShare));
@@ -662,8 +716,9 @@
                 id: 's_' + Date.now(),
                 date: new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}),
                 bike: bike.name,
+                qty: qty,
                 price: finalPrice,
-                buyPrice: bike.buyPrice,
+                buyPrice: bike.buyPrice * qty,
                 discount: discountRate,
                 com: com,
                 seller: currentUser.name
@@ -673,6 +728,7 @@
             const matchSeller = sellers.find(s => s.id === currentUser.id);
             if (matchSeller) matchSeller.com = (matchSeller.com || 0) + com;
 
+            document.getElementById('dashSaleQty').value = '1';
             saveToCloud();
             navTo('dash');
         }
@@ -731,7 +787,7 @@
                         if (!currentBatchMap[s.seller]) {
                             currentBatchMap[s.seller] = { razDate: nowString, seller: s.seller, count: 0, totalCA: 0, totalCom: 0 };
                         }
-                        currentBatchMap[s.seller].count += 1;
+                        currentBatchMap[s.seller].count += (s.qty || 1);
                         currentBatchMap[s.seller].totalCA += s.price;
                         currentBatchMap[s.seller].totalCom += s.com;
                     });
