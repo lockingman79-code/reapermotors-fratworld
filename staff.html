@@ -259,6 +259,24 @@
                     </table>
                 </div>
             </div>
+
+            <!-- ENCART HISTORIQUE DES IMPÔTS -->
+            <div class="panel">
+                <div class="panel-title" style="color: #fbbf24;">Historique des Impôts (RàZ)</div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date du RàZ</th>
+                                <th>Montant des Impôts (30%)</th>
+                                <th>Statut</th>
+                                <th>Marqué par</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bossTaxArchiveTable"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -281,7 +299,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.45, 'Responsable': 0.7, 'Co-Patron': 1, 'Patron': 1 };
+        const GRADES = { 'Recrue': 0.2, 'Vendeur': 0.3, 'Responsable': 0.5, 'Co-Patron': 0.8, 'Patron': 0.8 };
         
         const BIKES = [
             { id: 'b1', name: 'Akuma', price: 52500, buyPrice: 35000 },
@@ -337,6 +355,7 @@
         let sellers = [];
         let sales = [];
         let archives = [];
+        let taxArchives = [];
         let currentUser = null;
 
         // Synchronisation en temps réel avec Firebase
@@ -346,6 +365,7 @@
                 sellers = data.sellers || [];
                 sales = data.sales || [];
                 archives = data.archives || [];
+                taxArchives = data.taxArchives || [];
             } else {
                 sellers = [
                     { id: '1', name: 'Jax Teller', pass: '1234', grade: 'Patron', com: 0, phone: '555-0100', rib: 'FR76-1234' },
@@ -357,7 +377,7 @@
         });
 
         function saveToCloud() {
-            db.ref('reaper_data').set({ sellers, sales, archives });
+            db.ref('reaper_data').set({ sellers, sales, archives, taxArchives });
         }
 
         function openAuthTab(mode) {
@@ -579,6 +599,38 @@
                     `).join('');
                 }
             }
+
+            const bossTaxArchiveBody = document.getElementById('bossTaxArchiveTable');
+            if (bossTaxArchiveBody) {
+                if (taxArchives.length === 0) {
+                    bossTaxArchiveBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#6b7280;">Aucune archive d'impôts pour le moment.</td></tr>`;
+                } else {
+                    bossTaxArchiveBody.innerHTML = taxArchives.map(t => `
+                        <tr>
+                            <td style="font-size:0.75rem; color:#9ca3af;">${t.razDate}</td>
+                            <td style="color:#fbbf24; font-weight:bold;">$${t.amount.toLocaleString()}</td>
+                            <td>
+                                <select onchange="updateTaxStatus('${t.id}', this.value)" style="background:#000; border:1px solid #262635; color:${t.status === 'Payé' ? '#10b981' : '#ef4444'}; padding:4px 8px; border-radius:6px; font-weight:bold; outline:none;" ${!isBoss ? 'disabled' : ''}>
+                                    <option value="Impayé" ${t.status === 'Impayé' ? 'selected' : ''}>Impayé</option>
+                                    <option value="Payé" ${t.status === 'Payé' ? 'selected' : ''}>Payé</option>
+                                </select>
+                            </td>
+                            <td style="color:#9ca3af; font-style:italic;">${t.markedBy || '-'}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+
+        function updateTaxStatus(taxId, newStatus) {
+            const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
+            if (!isBoss) return;
+            const taxItem = taxArchives.find(t => t.id === taxId);
+            if (taxItem) {
+                taxItem.status = newStatus;
+                taxItem.markedBy = newStatus === 'Payé' ? currentUser.name : '';
+                saveToCloud();
+            }
         }
 
         function updateSellerGrade(sellerId, newGrade) {
@@ -670,10 +722,10 @@
         function resetAccounting() {
             const isBoss = currentUser.grade === 'Patron' || currentUser.grade === 'Co-Patron';
             if (!isBoss) return;
-            if (confirm("Voulez-vous réinitialiser la comptabilité ? (Le total des ventes sera archivé avec la date du jour et synchronisé en direct)")) {
+            if (confirm("Voulez-vous réinitialiser la comptabilité ? (Le total des ventes et les impôts actuels seront archivés avec la date du jour et synchronisés en direct)")) {
+                const nowString = new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                
                 if (sales.length > 0) {
-                    const nowString = new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                    
                     const currentBatchMap = {};
                     sales.forEach(s => {
                         if (!currentBatchMap[s.seller]) {
@@ -686,6 +738,24 @@
 
                     for (let sellerName in currentBatchMap) {
                         archives.unshift(currentBatchMap[sellerName]);
+                    }
+
+                    // Calcul et sauvegarde des impôts du lot (30% de Marge - Salaire)
+                    const totalCA = sales.reduce((a, b) => a + b.price, 0);
+                    const totalBuyCost = sales.reduce((a, b) => a + (b.buyPrice || 0), 0);
+                    const totalCommissions = sales.reduce((a, b) => a + b.com, 0);
+                    const totalStoreMargin = totalCA - totalBuyCost;
+                    const taxableSum = Math.max(0, totalStoreMargin - totalCommissions);
+                    const taxesDue = Math.round(taxableSum * 0.30);
+
+                    if (taxesDue > 0) {
+                        taxArchives.unshift({
+                            id: 'tax_' + Date.now(),
+                            razDate: nowString,
+                            amount: taxesDue,
+                            status: 'Impayé',
+                            markedBy: ''
+                        });
                     }
                 }
 
